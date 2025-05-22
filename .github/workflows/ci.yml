@@ -98,13 +98,23 @@ jobs:
           pnpm nx affected --targets=lint,test,build,format-native,lint-native &
           pids+=($!)
 
-          pnpm nx run-many -t e2e,e2e-ci &
+          pnpm nx run-many -t e2e-ci -- --json --outputFile=test-results.json &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
             wait "$pid"
           done
         timeout-minutes: 100
+
+      - name: Install dependencies for golden test monitor
+        run: pnpm install axios
+
+      - name: Golden Test Monitor - Final E2E CI Check
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+        run: |
+          echo "🎯 Running Golden Test Monitor"
+          node ./scripts/golden-test-config.js
 
   main-macos:
     runs-on: macos-latest
