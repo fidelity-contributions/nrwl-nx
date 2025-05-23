@@ -20,8 +20,8 @@ export default async function gradleExecutor(
       : Array.isArray(options.args)
       ? options.args
       : [];
-  if (options.testClassName) {
-    args.push(`--tests`, options.testClassName);
+  if (options.testName) {
+    args.push(`--tests`, options.testName);
   }
 
   getExcludeTasks(context.projectGraph, [

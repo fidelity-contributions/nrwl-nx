@@ -22,7 +22,7 @@ export const batchRunnerPath = join(
 
 interface GradleTask {
   taskName: string;
-  testClassName: string;
+  testName: string;
 }
 
 export default async function gradleBatch(
@@ -78,10 +78,10 @@ export default async function gradleBatch(
       (gradlewTasksToRun, taskId) => {
         const task = taskGraph.tasks[taskId];
         const gradlewTaskName = inputs[task.id].taskName;
-        const testClassName = inputs[task.id].testClassName;
+        const testName = inputs[task.id].testName;
         gradlewTasksToRun[taskId] = {
           taskName: gradlewTaskName,
-          testClassName: testClassName,
+          testName: testName,
         };
         return gradlewTasksToRun;
       },

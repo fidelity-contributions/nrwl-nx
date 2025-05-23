@@ -19,7 +19,7 @@ suspend fun runTasksInParallel(
 ): Map<String, TaskResult> = coroutineScope {
   logger.info("▶️ Running all tasks in a single Gradle run: ${tasks.keys.joinToString(", ")}")
 
-  val (testClassTasks, buildTasks) = tasks.entries.partition { it.value.testClassName != null }
+  val (testClassTasks, buildTasks) = tasks.entries.partition { it.value.testName != null }
 
   logger.info("🧪 Test launcher tasks: ${testClassTasks.joinToString(", ") { it.key }}")
   logger.info("🛠️ Build launcher tasks: ${buildTasks.joinToString(", ") { it.key }}")
@@ -140,7 +140,7 @@ fun runTestLauncher(
   val testEndTimes = mutableMapOf<String, Long>()
 
   tasks.forEach { (nxTaskId, taskConfig) ->
-    if (taskConfig.testClassName != null) {
+    if (taskConfig.testName != null) {
       testTaskStatus[nxTaskId] = true
     }
   }
@@ -152,14 +152,18 @@ fun runTestLauncher(
     connection
         .newTestLauncher()
         .apply {
-          forTasks(*taskNames)
           tasks.values
-              .mapNotNull { it.testClassName }
+              .mapNotNull { it.testName }
               .forEach {
                 logger.info("Registering test class: $it")
-                withArguments("--tests", it)
                 withJvmTestClasses(it)
+                withArguments("--tests", it)
               }
+
+          withArguments("--no-rebuild")
+          withArguments("--no-daemon") // Prevent task cross-contamination
+          withArguments("--isolate-projects") // Isolate project execution
+          withArguments("--no-configure-on-demand") // Prevent auto-configuration
           withArguments(*args.toTypedArray())
           setStandardOutput(outputStream)
           setStandardError(errorStream)
@@ -183,7 +187,7 @@ fun runTestLauncher(
   val globalEnd = System.currentTimeMillis()
 
   tasks.forEach { (nxTaskId, taskConfig) ->
-    if (taskConfig.testClassName != null) {
+    if (taskConfig.testName != null) {
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: globalEnd

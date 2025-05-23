@@ -23,7 +23,11 @@ fun testListener(
       ((event.descriptor as? JvmTestOperationDescriptor)?.className?.substringAfterLast('.')?.let {
           simpleClassName ->
         tasks.entries
-            .find { entry -> entry.value.testClassName?.let { simpleClassName == it } ?: false }
+            .find { entry ->
+              entry.value.testName?.let {
+                it.endsWith(".$simpleClassName") || it == simpleClassName
+              } ?: false
+            }
             ?.key
             ?.let { nxTaskId ->
               testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
@@ -32,10 +36,15 @@ fun testListener(
       })
     }
     is TestFinishEvent -> {
+      logger.info("event $event")
       ((event.descriptor as? JvmTestOperationDescriptor)?.className?.substringAfterLast('.')?.let {
           simpleClassName ->
         tasks.entries
-            .find { entry -> entry.value.testClassName?.let { simpleClassName == it } ?: false }
+            .find { entry ->
+              entry.value.testName?.let {
+                it.endsWith(".$simpleClassName") || it == simpleClassName
+              } ?: false
+            }
             ?.key
             ?.let { nxTaskId ->
               testEndTimes.compute(nxTaskId) { _, _ -> event.result.endTime }

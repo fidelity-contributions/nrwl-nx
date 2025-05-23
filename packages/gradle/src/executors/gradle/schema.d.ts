@@ -1,6 +1,6 @@
 export interface GradleExecutorSchema {
   taskName: string;
-  testClassName?: string;
+  testName?: string;
   args?: string[] | string;
   excludeDependsOn: boolean;
 }
